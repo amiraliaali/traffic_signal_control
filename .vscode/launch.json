@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "STC illustration",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/tsc_user_interface.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}
