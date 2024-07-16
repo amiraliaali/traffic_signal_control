@@ -1,11 +1,12 @@
 import numpy as np
 from traffic_signal_control import TrafficSignalControl, OBJECT_MAPPING
 import cv2 as cv
+import torch
 
 
 class TrafficSignalControlUI(TrafficSignalControl):
     def __init__(self, frame_dim=(500, 500), grid_size=15, num_traffic_lights=4, frame_delay_in_ms=500, cars_num=3) -> None:
-        super().__init__(grid_size, num_traffic_lights)
+        super().__init__(grid_size=grid_size, num_traffic_lights=num_traffic_lights, cars_num=cars_num)
         assert cars_num <= num_traffic_lights*2, "Number of cars needs to be smaller than twice the traffic lights"
         self.frame_dim = self.adjust_frame_dim(frame_dim, grid_size)
         self.cell_size = 0
@@ -141,21 +142,41 @@ class TrafficSignalControlUI(TrafficSignalControl):
         self.cell_size = cell_size
         self.frame_without_cars = maze_frame
 
-    def test_run(self):
+    def test_run(self, training_episodes, output_filename):
         maze_frame = self.frame_without_cars
 
         self.draw_control_lights(maze_frame, self.cell_size, self.grid_without_cars)
 
         for i in range(self.cars_num):
             self.generate_car()
+        
+        self.train_deep_sarsa(episodes=training_episodes)
+        self.test_agent(np.array([0, 0]))
+        self.create_video_from_frames(self.all_frames, output_filename)
 
-        while True:
+    def test_agent(self, state):
+        next_state = state
+        self.reset()
+        end = False
+        while not end:
+            frame_copy = np.copy(
+                self.frame_without_cars
+            )  # Create a new copy for each iteration
+
+            state_tensor = np.array(next_state)
+            state_tensor = torch.from_numpy(state_tensor).unsqueeze(dim=0).float()
+            action = torch.argmax(self.q_network(state_tensor)).item()
+
+            next_state, reward, end = self.next_step(action)
+            self.draw_control_lights(frame_copy, self.cell_size, self.grid_without_cars)
             new_grid = self.place_cars_in_grid(self.grid_without_cars)
-            maze_frame_with_cars = self.draw_cars(maze_frame, self.cell_size, new_grid)
-            self.render(maze_frame_with_cars)
-            self.move_cars_by_one_step()
+            frame = self.draw_cars(frame_copy, self.cell_size, new_grid)
+            self.render(frame)  # Render the frame_copy
+            self.all_frames.append(frame)
+            if end:
+                print()
 
 if __name__ == "__main__":
-    tsc = TrafficSignalControlUI(frame_dim=(700, 700), grid_size=15, num_traffic_lights=4, frame_delay_in_ms=100, cars_num=4)
-    tsc.test_run()
+    tsc = TrafficSignalControlUI(frame_dim=(700, 700), grid_size=15, num_traffic_lights=4, frame_delay_in_ms=500, cars_num=4)
+    tsc.test_run(750, "output_video.mp4")
 
