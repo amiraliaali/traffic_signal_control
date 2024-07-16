@@ -178,5 +178,5 @@ class TrafficSignalControlUI(TrafficSignalControl):
 
 if __name__ == "__main__":
     tsc = TrafficSignalControlUI(frame_dim=(700, 700), grid_size=15, num_traffic_lights=4, frame_delay_in_ms=500, cars_num=4)
-    tsc.test_run(750, "output_video.mp4")
+    tsc.test_run(1000, "output_video.mp4")
 

@@ -35,7 +35,7 @@ class Car:
         return self.position
     
     def increment_waiting_time(self):
-        self.waited_time += 1
+        self.waited_time += (1 + self.waited_time/10)
 
     def get_waited_time(self):
         return self.waited_time

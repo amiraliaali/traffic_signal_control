@@ -25,7 +25,7 @@ ACTIONS_MAPPING = {
 }
 
 class TrafficSignalControl:
-    def __init__(self, grid_size=15, num_traffic_lights=4, total_running_time=100, states_dim=2, cars_num=3) -> None:
+    def __init__(self, grid_size=15, num_traffic_lights=4, total_running_time=150, states_dim=2, cars_num=3) -> None:
         assert num_traffic_lights % 2 == 0, "number of traffic lights should be an even number"
         self.grid_size = grid_size
         self.num_traffic_lights = num_traffic_lights
@@ -98,12 +98,14 @@ class TrafficSignalControl:
             av = self.q_network(state).detach()
             return torch.argmax(av, dim=-1, keepdim=True)
     
-    def train_deep_sarsa(self, episodes, alpha=0.001, batch_size=32, gamma=0.99, epsilon=0.05):
+    def train_deep_sarsa(self, episodes, alpha=0.001, batch_size=32, gamma=0.99, epsilon=0.05, update_every=10):
         optim = AdamW(self.q_network.parameters(), lr=alpha)
         memory = ReplayMemory()
         stats = {"MSE Loss": [], "Returns": []}
 
-        for episode in tqdm(range(1, episodes+1)):
+        progress_bar = tqdm(range(1, episodes+1), desc="Training", leave=True)
+
+        for episode in progress_bar:
             state = self.reset()
             done = False
             ep_return = 0
@@ -136,50 +138,66 @@ class TrafficSignalControl:
 
             stats["Returns"].append(ep_return)
 
-            if episode % 10 == 0:
+             # Update the progress bar description with the average reward
+            if episode % update_every == 0:
+                avg_return = np.mean(stats["Returns"][-update_every:])
+                avg_loss = np.mean(stats["MSE Loss"][-update_every:]) if stats["MSE Loss"] else 0
+                progress_bar.set_description(f"Training (Avg Reward: {avg_return:.2f}, Avg Loss: {avg_loss:.4f})")
+
+            if episode % 50 == 0:
                 self.target_q_network.load_state_dict(self.q_network.state_dict())
         return stats
 
     def move_cars_by_one_step(self):
         if random.choice([True, False]):
             self.generate_car()
+            self.generate_car()
         # Create a new list of cars that are still within bounds
         self.cars = [car for car in self.cars if not (car.next_step()[0] < -1 or car.next_step()[1] < -1)]
-        rewards_list = list()
+        rewards_list = [0]
 
         for car in self.cars:
+            waited_time = car.get_waited_time()
             car_next_position = car.next_step()
             new_grid = self.place_cars_in_grid(self.grid_without_cars)
             next_position_value_in_grid = new_grid[car_next_position]
 
             if next_position_value_in_grid == OBJECT_MAPPING["traffic_light_red"] or next_position_value_in_grid == OBJECT_MAPPING["cars"]:
                 car.increment_waiting_time()
-                if car.get_waited_time() > 10:
-                    rewards_list.append(-3)
-                elif car.get_waited_time() > 20:
-                    rewards_list.append(-6)
+                if (waited_time > 30):
+                    rewards_list.append(-30)
+                elif (waited_time > 20):
+                    rewards_list.append(-20)
+                elif (waited_time > 10):
+                    rewards_list.append(-10)
                 else:
-                    rewards_list.append(-1)
+                    rewards_list.append(-5)
+
             else:
                 if next_position_value_in_grid == OBJECT_MAPPING["traffic_light_green"]:
                     car.set_is_in_junction()
                     car.go_to_next_step()
-                car.go_to_next_step()
-                if car.get_waited_time() > 10:
-                    rewards_list.append(6)
-                elif car.get_waited_time() > 20:
-                    rewards_list.append(10)
+                    rewards_list.append(30)
                 else:
-                    rewards_list.append(3)
+                    car.go_to_next_step()
+                    if (waited_time > 30):
+                        rewards_list.append(30)
+                    elif (waited_time > 20):
+                        rewards_list.append(20)
+                    elif (waited_time > 10):
+                        rewards_list.append(10)
+                    else:
+                        rewards_list.append(5)
+
         for car1 in self.cars:
             for car2 in self.cars:
                 if car1 == car2:
                     continue
                 if car1.get_coordinate() !=  car2.get_coordinate():
                     if car1.get_is_in_junction() == car2.get_is_in_junction() == True:
-                        rewards_list.append(-50)
+                        rewards_list.append(-200)
         
-        return sum(rewards_list)
+        return sum(rewards_list) / len(rewards_list)
             
     def create_grid(self, grid_size):
         assert grid_size > 10, "grid size must be bigger than 10"
@@ -212,11 +230,13 @@ class TrafficSignalControl:
 
     def generate_network(self):
         return nn.Sequential(
-            nn.Linear(self.states_dim, 128),
+            nn.Linear(self.states_dim, 64),
+            nn.LayerNorm(64),
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(64, 128),
+            nn.LayerNorm(128),
             nn.ReLU(),
-            nn.Linear(64, self.actions_num))
+            nn.Linear(128, self.actions_num))
     
     def step(self, state, action):
         state = state.numpy().flatten()

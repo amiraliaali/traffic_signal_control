@@ -2,7 +2,7 @@ import torch
 import random
 
 class ReplayMemory:
-    def __init__(self, capacity=1000):
+    def __init__(self, capacity=10000):
         self.capacity = capacity
         self.memory = []
         self.position = 0
