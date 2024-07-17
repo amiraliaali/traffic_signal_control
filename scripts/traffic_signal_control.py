@@ -25,7 +25,7 @@ ACTIONS_MAPPING = {
 }
 
 class TrafficSignalControl:
-    def __init__(self, grid_size=15, num_traffic_lights=4, total_running_time=150, states_dim=2, cars_num=3) -> None:
+    def __init__(self, grid_size=15, num_traffic_lights=4, total_running_time=150, states_dim=4, cars_num=3) -> None:
         assert num_traffic_lights % 2 == 0, "number of traffic lights should be an even number"
         self.grid_size = grid_size
         self.num_traffic_lights = num_traffic_lights
@@ -195,7 +195,7 @@ class TrafficSignalControl:
                     continue
                 if car1.get_coordinate() !=  car2.get_coordinate():
                     if car1.get_is_in_junction() == car2.get_is_in_junction() == True:
-                        rewards_list.append(-200)
+                        rewards_list=[-200]
         
         return sum(rewards_list) / len(rewards_list)
             
@@ -252,12 +252,18 @@ class TrafficSignalControl:
     def get_current_state(self):
         waiting_time_in_horizontal = 0
         waiting_time_in_vertical = 0
+        is_car_from_x_in_junction = 0
+        is_car_from_y_in_junction = 0
         for car in self.cars:
             if car.get_coordinate() == "x":
                 waiting_time_in_horizontal += car.get_waited_time()
+                if car.get_is_in_junction():
+                    is_car_from_x_in_junction = 1
             else:
                 waiting_time_in_vertical += car.get_waited_time()
-        state = np.array([waiting_time_in_vertical, waiting_time_in_horizontal])
+                if car.get_is_in_junction():
+                    is_car_from_y_in_junction = 1
+        state = np.array([waiting_time_in_vertical, waiting_time_in_horizontal, is_car_from_y_in_junction, is_car_from_x_in_junction])
         return state
         
 
@@ -267,7 +273,7 @@ class TrafficSignalControl:
         for i in range(self.cars_num):
             self.generate_car()
         self.traffic_lights_status = (-1, -1)
-        initial_state = np.array([0, 0])
+        initial_state = np.array([0, 0, 0, 0])
         return torch.from_numpy(initial_state).unsqueeze(dim=0).float()
 
     def create_video_from_frames(self, frames, output_filename, fps=5):

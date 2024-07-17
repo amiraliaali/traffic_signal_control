@@ -151,7 +151,7 @@ class TrafficSignalControlUI(TrafficSignalControl):
             self.generate_car()
         
         self.train_deep_sarsa(episodes=training_episodes)
-        self.test_agent(np.array([0, 0]))
+        self.test_agent(np.array([0, 0, 0, 0]))
         self.create_video_from_frames(self.all_frames, output_filename)
 
     def test_agent(self, state):
