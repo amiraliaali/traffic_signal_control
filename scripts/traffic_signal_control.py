@@ -164,9 +164,9 @@ class TrafficSignalControl:
 
             if next_position_value_in_grid == OBJECT_MAPPING["traffic_light_red"] or next_position_value_in_grid == OBJECT_MAPPING["cars"]:
                 car.increment_waiting_time()
-                if (waited_time > 30):
+                if (waited_time > 20):
                     rewards_list.append(-5)
-                elif (waited_time > 20):
+                elif (waited_time > 15):
                     rewards_list.append(-4)
                 elif (waited_time > 10):
                     rewards_list.append(-3)
@@ -180,9 +180,9 @@ class TrafficSignalControl:
                     rewards_list.append(10)
                 else:
                     car.go_to_next_step()
-                    if (waited_time > 30):
+                    if (waited_time > 20):
                         rewards_list.append(5)
-                    elif (waited_time > 20):
+                    elif (waited_time > 15):
                         rewards_list.append(4)
                     elif (waited_time > 10):
                         rewards_list.append(3)
