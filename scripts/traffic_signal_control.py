@@ -149,9 +149,6 @@ class TrafficSignalControl:
         return stats
 
     def move_cars_by_one_step(self):
-        if random.choice([True, False]):
-            self.generate_car()
-            self.generate_car()
         # Create a new list of cars that are still within bounds
         self.cars = [car for car in self.cars if not (car.next_step()[0] < -1 or car.next_step()[1] < -1)]
         rewards_list = [0]
@@ -196,6 +193,9 @@ class TrafficSignalControl:
                 if car1.get_coordinate() !=  car2.get_coordinate():
                     if car1.get_is_in_junction() == car2.get_is_in_junction() == True:
                         rewards_list=[-100]
+        if random.choice([True, False]):
+            self.generate_car()
+            self.generate_car()
         
         return sum(rewards_list) / len(rewards_list)
             
