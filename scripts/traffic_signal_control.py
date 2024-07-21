@@ -98,7 +98,7 @@ class TrafficSignalControl:
             av = self.q_network(state).detach()
             return torch.argmax(av, dim=-1, keepdim=True)
     
-    def train_deep_sarsa(self, episodes, alpha=0.001, batch_size=32, gamma=0.99, epsilon=0.05, update_every=10):
+    def train_deep_sarsa(self, episodes, alpha=0.0005, batch_size=64, gamma=0.99, epsilon=0.2, update_every=10):
         optim = AdamW(self.q_network.parameters(), lr=alpha)
         memory = ReplayMemory()
         stats = {"MSE Loss": [], "Returns": []}
@@ -165,29 +165,29 @@ class TrafficSignalControl:
             if next_position_value_in_grid == OBJECT_MAPPING["traffic_light_red"] or next_position_value_in_grid == OBJECT_MAPPING["cars"]:
                 car.increment_waiting_time()
                 if (waited_time > 30):
-                    rewards_list.append(-30)
-                elif (waited_time > 20):
-                    rewards_list.append(-20)
-                elif (waited_time > 10):
-                    rewards_list.append(-10)
-                else:
                     rewards_list.append(-5)
+                elif (waited_time > 20):
+                    rewards_list.append(-4)
+                elif (waited_time > 10):
+                    rewards_list.append(-3)
+                else:
+                    rewards_list.append(-1)
 
             else:
                 if next_position_value_in_grid == OBJECT_MAPPING["traffic_light_green"]:
                     car.set_is_in_junction()
                     car.go_to_next_step()
-                    rewards_list.append(30)
+                    rewards_list.append(10)
                 else:
                     car.go_to_next_step()
                     if (waited_time > 30):
-                        rewards_list.append(30)
-                    elif (waited_time > 20):
-                        rewards_list.append(20)
-                    elif (waited_time > 10):
-                        rewards_list.append(10)
-                    else:
                         rewards_list.append(5)
+                    elif (waited_time > 20):
+                        rewards_list.append(4)
+                    elif (waited_time > 10):
+                        rewards_list.append(3)
+                    else:
+                        rewards_list.append(1)
 
         for car1 in self.cars:
             for car2 in self.cars:

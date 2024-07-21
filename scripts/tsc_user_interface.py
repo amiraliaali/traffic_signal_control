@@ -173,8 +173,6 @@ class TrafficSignalControlUI(TrafficSignalControl):
             frame = self.draw_cars(frame_copy, self.cell_size, new_grid)
             self.render(frame)  # Render the frame_copy
             self.all_frames.append(frame)
-            if end:
-                print()
 
 if __name__ == "__main__":
     tsc = TrafficSignalControlUI(frame_dim=(700, 700), grid_size=15, num_traffic_lights=4, frame_delay_in_ms=500, cars_num=4)
