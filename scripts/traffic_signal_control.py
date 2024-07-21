@@ -25,7 +25,7 @@ ACTIONS_MAPPING = {
 }
 
 class TrafficSignalControl:
-    def __init__(self, grid_size=15, num_traffic_lights=4, total_running_time=150, states_dim=4, cars_num=3) -> None:
+    def __init__(self, grid_size=15, num_traffic_lights=4, total_running_time=250, states_dim=4, cars_num=3) -> None:
         assert num_traffic_lights % 2 == 0, "number of traffic lights should be an even number"
         self.grid_size = grid_size
         self.num_traffic_lights = num_traffic_lights
@@ -195,7 +195,7 @@ class TrafficSignalControl:
                     continue
                 if car1.get_coordinate() !=  car2.get_coordinate():
                     if car1.get_is_in_junction() == car2.get_is_in_junction() == True:
-                        rewards_list=[-200]
+                        rewards_list=[-100]
         
         return sum(rewards_list) / len(rewards_list)
             
