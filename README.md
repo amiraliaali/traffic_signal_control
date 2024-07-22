@@ -1,10 +1,10 @@
 # Traffic Signal Control using Deep SARSA
 
 ## Test Output GIF
-Here are the results of our work, showing an agent successfully and efficiently controlling the traffic lights.
+Here is the result of our work, showing an agent successfully and efficiently controlling the traffic lights.
 
 <div style="display: flex; gap: 10px;">
-  <img src="https://github.com/amiraliaali/traffic_signal_control/blob/main/output_video.gif" width="400" height="400" />
+  <img src="https://github.com/amiraliaali/traffic_signal_control/blob/main/output_video.gif" width="600" height="600" />
 </div>
 
 ## Repository Overview
